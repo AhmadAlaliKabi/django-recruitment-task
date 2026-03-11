@@ -8,7 +8,7 @@ class Organization(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.name
+        return self.name #This defines how the object is shown when printed.
 
 
 class JobPosting(models.Model):
@@ -24,7 +24,7 @@ class JobPosting(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.title} - {self.organization.name}"
+        return f"{self.title} - {self.organization.name}" #Controls how the job posting is displayed.
 
 
 class Candidate(models.Model):
@@ -33,6 +33,8 @@ class Candidate(models.Model):
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=30, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    priority_score = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -46,7 +48,7 @@ class Resume(models.Model):
     )
     job_posting = models.ForeignKey(
         JobPosting,
-        on_delete=models.SET_NULL,
+        on_delete=models.SET_NULL, # if job post deleted , resume doesnt have to delete
         null=True,
         blank=True,
         related_name="resumes"
