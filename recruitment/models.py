@@ -58,3 +58,5 @@ class Resume(models.Model):
 
     def __str__(self):
         return f"Resume for {self.candidate}"
+
+    file = models.FileField(upload_to="resumes/")
