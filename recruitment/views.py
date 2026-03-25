@@ -5,7 +5,14 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 from .models import JobPosting, Candidate
+from rest_framework import viewsets
+from .models import Candidate
+from .serializers import CandidateSerializer
 
+
+class CandidateViewSet(viewsets.ModelViewSet):
+    queryset = Candidate.objects.all().order_by("-created_at")
+    serializer_class = CandidateSerializer
 
 class PublicJobListView(View):
     def get(self, request):
