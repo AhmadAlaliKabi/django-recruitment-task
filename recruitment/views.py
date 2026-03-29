@@ -8,11 +8,16 @@ from .models import JobPosting, Candidate
 from rest_framework import viewsets
 from .models import Candidate
 from .serializers import CandidateSerializer
+from rest_framework.permissions import IsAuthenticated
 
 
 class CandidateViewSet(viewsets.ModelViewSet):
     queryset = Candidate.objects.all().order_by("-created_at")
     serializer_class = CandidateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_context(self):
+        return {"request": self.request}
 
 class PublicJobListView(View):
     def get(self, request):

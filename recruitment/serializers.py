@@ -41,6 +41,16 @@ class CandidateSerializer(serializers.ModelSerializer):
             "email",
             "phone",
             "created_at",
+            "expected_salary",
             "resumes",
         ]
         read_only_fields = ["created_at"]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get("request")
+
+        if request and not request.user.is_staff:
+            data.pop("expected_salary", None)
+
+        return data
