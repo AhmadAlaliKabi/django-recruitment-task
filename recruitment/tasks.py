@@ -1,7 +1,9 @@
 import re
 from celery import shared_task
 from pypdf import PdfReader
-from recruitment.models import Resume
+from recruitment.models import JobPosting, Resume, DailyStats
+from django.utils import timezone
+
 
 
 def extract_text_from_pdf(file_path):
@@ -39,7 +41,20 @@ def parse_candidate_text(text):
         "phone": phone,
         "skills": skills,
     }
+@shared_task
+def generate_daily_stats():
+    today = timezone.now().date()
 
+    for job in JobPosting.objects.all():
+        application_count = Resume.objects.filter(job_posting=job).count()
+
+        DailyStats.objects.update_or_create(
+            job_posting=job,
+            date=today,
+            defaults={"application_count": application_count}
+        )
+
+    return f"Daily stats generated for {today}"
 
 @shared_task
 def parse_resume_task(resume_id):
@@ -58,3 +73,4 @@ def parse_resume_task(resume_id):
     resume.save()
 
     return parsed_data
+

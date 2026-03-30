@@ -1,5 +1,16 @@
 from django.db import models
 
+class DailyStats(models.Model):
+    job_posting = models.ForeignKey('JobPosting', on_delete=models.CASCADE)
+    date = models.DateField()
+    application_count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ('job_posting', 'date')
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.job_posting} - {self.date} - {self.application_count}"
 
 class Organization(models.Model):
     name = models.CharField(max_length=255)

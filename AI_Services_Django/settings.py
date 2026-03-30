@@ -82,6 +82,16 @@ DATABASES = {
     }
 }
 
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    'generate-daily-stats-every-minute': {
+        'task': 'recruitment.tasks.generate_daily_stats',
+        'schedule': crontab(minute='*/1'),
+    },
+}
+TIME_ZONE = 'Asia/Riyadh'
+USE_TZ = True
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -107,11 +117,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
