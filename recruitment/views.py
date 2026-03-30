@@ -11,7 +11,18 @@ from .models import Candidate
 from .serializers import CandidateSerializer
 from rest_framework.permissions import IsAuthenticated
 
+# recruitment/views.py
 
+from rest_framework import viewsets
+from rest_framework.parsers import MultiPartParser, FormParser
+from .models import Resume
+from .serializers import ResumeSerializer
+
+
+class ResumeViewSet(viewsets.ModelViewSet):
+    queryset = Resume.objects.all()
+    serializer_class = ResumeSerializer
+    parser_classes = [MultiPartParser, FormParser]
 class CandidateViewSet(viewsets.ModelViewSet):
     queryset = Candidate.objects.all().order_by("-created_at")
     serializer_class = CandidateSerializer

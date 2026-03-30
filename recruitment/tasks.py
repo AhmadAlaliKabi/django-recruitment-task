@@ -1,7 +1,60 @@
+import re
 from celery import shared_task
+from pypdf import PdfReader
+from recruitment.models import Resume
+
+
+def extract_text_from_pdf(file_path):
+    text = ""
+
+    try:
+        reader = PdfReader(file_path)
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
+    except Exception as e:
+        print(f"PDF extraction error: {e}")
+
+    return text.strip()
+
+
+def parse_candidate_text(text):
+    name_match = re.search(r"name:\s*(.+)", text, re.IGNORECASE)
+    email_match = re.search(r"email:\s*([^\s]+)", text, re.IGNORECASE)
+    phone_match = re.search(r"phone:\s*(.+)", text, re.IGNORECASE)
+    skills_match = re.search(r"skills:\s*(.+)", text, re.IGNORECASE)
+
+    name = name_match.group(1).strip() if name_match else None
+    email = email_match.group(1).strip() if email_match else None
+    phone = phone_match.group(1).strip() if phone_match else None
+
+    skills = []
+    if skills_match:
+        skills = [skill.strip() for skill in skills_match.group(1).split(",") if skill.strip()]
+
+    return {
+        "name": name,
+        "email": email,
+        "phone": phone,
+        "skills": skills,
+    }
 
 
 @shared_task
-def test_resume_processing():
-    return "Resume processing task executed successfully."
-#Later, this could be replaced with real logic like: resume parsing AI skill extraction sending notifications
+def parse_resume_task(resume_id):
+    try:
+        resume = Resume.objects.get(id=resume_id)
+    except Resume.DoesNotExist:
+        return "Resume not found"
+
+    file_path = resume.file.path
+
+    extracted_text = extract_text_from_pdf(file_path)
+    parsed_data = parse_candidate_text(extracted_text)
+
+    resume.extracted_text = extracted_text
+    resume.ai_extracted_skills = parsed_data.get("skills", [])
+    resume.save()
+
+    return parsed_data

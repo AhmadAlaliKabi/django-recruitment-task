@@ -1,5 +1,13 @@
+# recruitment/serializers.py
 from rest_framework import serializers
 from .models import Candidate, Resume
+from .tasks import parse_resume_task
+
+
+class CandidateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Candidate
+        fields = "__all__"
 
 
 class ResumeSerializer(serializers.ModelSerializer):
@@ -15,42 +23,21 @@ class ResumeSerializer(serializers.ModelSerializer):
             "extracted_text",
             "ai_extracted_skills",
         ]
-        read_only_fields = ["file_name", "uploaded_at"]
-
-    def validate_ai_extracted_skills(self, value):
-        if not value:
-            raise serializers.ValidationError("AI extracted skills must not be empty.")
-        return value
+        read_only_fields = ["uploaded_at", "extracted_text", "ai_extracted_skills"]
+        extra_kwargs = {
+            "file_name": {"required": False, "allow_blank": True},
+            "job_posting": {"required": False, "allow_null": True},
+        }
 
     def create(self, validated_data):
         uploaded_file = validated_data.get("file")
-        if uploaded_file and "file_name" not in validated_data:
+
+        if uploaded_file and not validated_data.get("file_name"):
             validated_data["file_name"] = uploaded_file.name
-        return super().create(validated_data)
 
+        resume = Resume.objects.create(**validated_data)
 
-class CandidateSerializer(serializers.ModelSerializer):
-    resumes = ResumeSerializer(many=True, read_only=True)
+        print("Sending task to Celery for resume:", resume.id)
+        parse_resume_task.delay(resume.id)
 
-    class Meta:
-        model = Candidate
-        fields = [
-            "id",
-            "first_name",
-            "last_name",
-            "email",
-            "phone",
-            "created_at",
-            "expected_salary",
-            "resumes",
-        ]
-        read_only_fields = ["created_at"]
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        request = self.context.get("request")
-
-        if request and not request.user.is_staff:
-            data.pop("expected_salary", None)
-
-        return data
+        return resume
