@@ -1,3 +1,4 @@
+#views.py
 from django.http import JsonResponse
 from django.views import View
 from django.utils.decorators import method_decorator
@@ -78,3 +79,14 @@ class InternalJobListView(View):
             "posted_at",
         )
         return JsonResponse({"internal_jobs": list(jobs)}, status=200)
+from django.http import JsonResponse
+from django.core.cache import cache
+
+
+def test_redis_cache(request):
+    cache.set("test_key", "Redis is working", timeout=60)
+    value = cache.get("test_key")
+
+    return JsonResponse({
+        "cached_value": value
+    })
