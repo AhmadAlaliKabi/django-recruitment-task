@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'recruitment',
     'users',
 ]
-
+AUTH_USER_MODEL = 'users.CustomUser'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -50,8 +50,23 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'recruitment.middleware.ResumeAccessLogMiddleware',
 ]
-
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "recruitment.middleware": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+    },
+}
 ROOT_URLCONF = 'AI_Services_Django.urls'
 
 TEMPLATES = [
