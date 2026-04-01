@@ -6,7 +6,10 @@
 #   - manage.py runserver for app startup
 #   - host machine via port 8000
 
+version: '3.9'
+
 services:
+
   web:
     build: .
     command: python manage.py runserver 0.0.0.0:8000
@@ -14,3 +17,41 @@ services:
       - .:/app
     ports:
       - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: ai_services_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  worker:
+    build: .
+    command: celery -A AI_Services_Django worker -l info
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+
+  beat:
+    build: .
+    command: celery -A AI_Services_Django beat -l info
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
