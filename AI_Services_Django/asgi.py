@@ -1,10 +1,10 @@
 """
-ASGI config for AI_Services_Django project.
+Purpose:
+    ASGI entrypoint (used if you run async servers like uvicorn/daphne).
 
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.0/howto/deployment/asgi/
+Connects with:
+    - AI_Services_Django.settings
+    - Deployment layer that serves this app over ASGI
 """
 
 import os

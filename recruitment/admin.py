@@ -1,3 +1,12 @@
+"""
+Purpose:
+    Django admin registrations for recruitment models.
+
+Connects with:
+    - models.py definitions
+    - /admin UI for manual data inspection/management
+"""
+
 from django.contrib import admin
 from .models import Organization, JobPosting, Candidate, Resume
 from .models import DailyStats
@@ -9,6 +18,7 @@ admin.site.register(Resume)
 
 @admin.register(DailyStats)
 class DailyStatsAdmin(admin.ModelAdmin):
+    # Stats are system-generated, so admin can view but not manually create/delete.
     list_display = ("job_posting", "date", "application_count")
     ordering = ("-date",)
     readonly_fields = ("job_posting", "date", "application_count")

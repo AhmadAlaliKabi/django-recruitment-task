@@ -1,3 +1,10 @@
+# Purpose:
+#   Ignore generated/local files that should not be committed.
+#
+# Connects with:
+#   - local dev environment (venv, IDE, db artifacts)
+#   - git workflow cleanliness
+
 # Python
 __pycache__/
 *.pyc

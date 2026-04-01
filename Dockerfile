@@ -1,3 +1,11 @@
+# Purpose:
+#   Docker image definition for running this Django backend in containers.
+#
+# Connects with:
+#   - docker-compose.yml (service runtime command/ports/volume)
+#   - requirements.txt (Python dependencies installed into image)
+#   - manage.py runserver command used by compose
+
 FROM ubuntu:latest
 LABEL authors="AhmadAlali"
 

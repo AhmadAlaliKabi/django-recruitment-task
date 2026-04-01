@@ -1,4 +1,14 @@
 #views.py
+"""
+Purpose:
+    API/view layer for public jobs, internal jobs, candidate CRUD, resume CRUD, and cache test.
+
+Connects with:
+    - models.py for all data access
+    - serializers.py for DRF model viewsets
+    - urls_public.py / urls_internal.py / drf_urls.py / project urls.py for routing
+"""
+
 from django.http import JsonResponse
 from django.views import View
 from django.utils.decorators import method_decorator
@@ -20,10 +30,12 @@ from .serializers import ResumeSerializer
 
 
 class ResumeViewSet(viewsets.ModelViewSet):
+    # DRF endpoint for uploading/listing/updating resumes (supports multipart file upload).
     queryset = Resume.objects.all()
     serializer_class = ResumeSerializer
     parser_classes = [MultiPartParser, FormParser]
 class CandidateViewSet(viewsets.ModelViewSet):
+    # Auth-protected candidate CRUD for internal API users.
     queryset = Candidate.objects.all().order_by("-created_at")
     serializer_class = CandidateSerializer
     permission_classes = [IsAuthenticated]
@@ -32,6 +44,7 @@ class CandidateViewSet(viewsets.ModelViewSet):
         return {"request": self.request}
 
 class PublicJobListView(View):
+    # Public endpoint: only active jobs.
     def get(self, request):
         jobs = JobPosting.objects.filter(is_active=True).values(
             "id",
@@ -45,6 +58,7 @@ class PublicJobListView(View):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class JobApplicationView(View):
+    # Public endpoint: accepts simple JSON application and creates Candidate record.
     def post(self, request):
         try:
             data = json.loads(request.body)
@@ -80,6 +94,7 @@ class JobApplicationView(View):
 
 
 class InternalJobListView(View):
+    # Internal endpoint: includes is_active state for all jobs.
     def get(self, request):
         jobs = JobPosting.objects.all().values(
             "id",
@@ -95,6 +110,7 @@ from django.core.cache import cache
 
 
 def test_redis_cache(request):
+    # Quick health-check for Redis cache wiring.
     cache.set("test_key", "Redis is working", timeout=60)
     value = cache.get("test_key")
 

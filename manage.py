@@ -1,5 +1,12 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
+"""
+Purpose:
+    Entry point for Django management commands (runserver, migrate, createsuperuser, etc).
+
+Connects with:
+    - AI_Services_Django.settings (via DJANGO_SETTINGS_MODULE)
+    - django.core.management.execute_from_command_line
+"""
 import os
 import sys
 

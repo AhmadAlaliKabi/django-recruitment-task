@@ -1,10 +1,10 @@
 """
-WSGI config for AI_Services_Django project.
+Purpose:
+    WSGI entrypoint (used by classic Django servers like gunicorn/uwsgi).
 
-It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.0/howto/deployment/wsgi/
+Connects with:
+    - AI_Services_Django.settings
+    - Deployment layer that serves this app over WSGI
 """
 
 import os

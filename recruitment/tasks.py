@@ -1,3 +1,15 @@
+"""
+Purpose:
+    Background jobs for heavy/periodic work:
+    1) Parse resume PDFs and extract skills.
+    2) Generate daily application stats.
+
+Connects with:
+    - models.py (Resume, JobPosting, DailyStats)
+    - serializers.py (resume creation triggers parse task)
+    - celery.py/settings.py (task registration + scheduling)
+"""
+
 import re
 from celery import shared_task
 from pypdf import PdfReader
@@ -7,6 +19,7 @@ from django.utils import timezone
 
 
 def extract_text_from_pdf(file_path):
+    # Reads all pages and concatenates text for later parsing.
     text = ""
 
     try:
@@ -22,6 +35,7 @@ def extract_text_from_pdf(file_path):
 
 
 def parse_candidate_text(text):
+    # Lightweight regex parser (not true AI yet) for simple labeled resume text.
     name_match = re.search(r"name:\s*(.+)", text, re.IGNORECASE)
     email_match = re.search(r"email:\s*([^\s]+)", text, re.IGNORECASE)
     phone_match = re.search(r"phone:\s*(.+)", text, re.IGNORECASE)
@@ -43,6 +57,7 @@ def parse_candidate_text(text):
     }
 @shared_task
 def generate_daily_stats():
+    # For each job, store/update "how many resumes applied" for today.
     today = timezone.now().date()
 
     for job in JobPosting.objects.all():
@@ -58,6 +73,7 @@ def generate_daily_stats():
 
 @shared_task
 def parse_resume_task(resume_id):
+    # Background processing after upload so API stays fast.
     try:
         resume = Resume.objects.get(id=resume_id)
     except Resume.DoesNotExist:

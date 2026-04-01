@@ -1,3 +1,12 @@
+"""
+Purpose:
+    Celery app bootstrap so worker/beat processes can load Django settings and tasks.
+
+Connects with:
+    - settings.py (CELERY_* config)
+    - recruitment.tasks (auto-discovered shared tasks)
+"""
+
 import os
 from celery import Celery
 

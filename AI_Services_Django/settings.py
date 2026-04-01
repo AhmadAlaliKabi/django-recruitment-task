@@ -1,3 +1,15 @@
+"""
+Purpose:
+    Main Django configuration for this backend.
+
+Connects with:
+    - Database (PostgreSQL)
+    - Cache (Redis via django-redis)
+    - Async jobs (Celery + Redis broker/result backend)
+    - Auth (JWT + custom user model from users app)
+    - URL router and WSGI/ASGI entrypoints
+"""
+
 from pathlib import Path
 from datetime import timedelta
 import os
@@ -5,17 +17,20 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-dev-key")
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = True
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
 INSTALLED_APPS = [
+    # Core Django apps (admin/auth/session/static framework)
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Third-party API framework
     'rest_framework',
+    # Local apps
     'recruitment',
     'users',
 ]
@@ -34,9 +49,15 @@ ROOT_URLCONF = 'AI_Services_Django.urls'
 WSGI_APPLICATION = 'AI_Services_Django.wsgi.application'
 
 DATABASES = {
+    # Current setup is fixed to local postgres values.
+    # You can move this to env vars later for cleaner deployment setups.
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "ai_services_db",
+        "USER": "postgres",
+        "PASSWORD": "1234",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
 
@@ -54,6 +75,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
+    # All DRF endpoints use JWT bearer authentication by default.
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
@@ -65,6 +87,7 @@ SIMPLE_JWT = {
 }
 
 CACHES = {
+    # Redis is used as the default Django cache backend.
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": os.getenv("CACHE_URL", "redis://redis:6379/1"),
@@ -84,6 +107,7 @@ CELERY_TIMEZONE = "Asia/Riyadh"
 from celery.schedules import crontab
 
 CELERY_BEAT_SCHEDULE = {
+    # Periodic task: refresh stats rows continuously (currently every 1 minute).
     'generate-daily-stats-every-minute': {
         'task': 'recruitment.tasks.generate_daily_stats',
         'schedule': crontab(minute='*/1'),

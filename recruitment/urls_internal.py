@@ -1,3 +1,12 @@
+"""
+Purpose:
+    Internal URL routes for job listing with internal details.
+
+Connects with:
+    - views.py (InternalJobListView)
+    - project urls.py under /api/internal/
+"""
+
 from django.urls import path
 from .views import InternalJobListView
 

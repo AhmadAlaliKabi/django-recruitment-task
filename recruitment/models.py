@@ -1,6 +1,19 @@
+"""
+Purpose:
+    Data models for the recruitment domain (orgs, jobs, candidates, resumes, stats).
+
+Connects with:
+    - serializers.py for API IO
+    - views.py for read/write operations
+    - admin.py for admin management
+    - tasks.py for async resume parsing and daily stats
+    - migrations/ for DB schema history
+"""
+
 from django.db import models
 
 class DailyStats(models.Model):
+    # One row per job per day, storing number of applications.
     job_posting = models.ForeignKey('JobPosting', on_delete=models.CASCADE)
     date = models.DateField()
     application_count = models.PositiveIntegerField(default=0)
@@ -13,6 +26,7 @@ class DailyStats(models.Model):
         return f"{self.job_posting} - {self.date} - {self.application_count}"
 
 class Organization(models.Model):
+    # Hiring company/organization that owns job postings.
     name = models.CharField(max_length=255)
     industry = models.CharField(max_length=255, blank=True)
     website = models.URLField(blank=True)
@@ -23,6 +37,7 @@ class Organization(models.Model):
 
 
 class JobPosting(models.Model):
+    # A single job ad published by one organization.
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
@@ -39,6 +54,7 @@ class JobPosting(models.Model):
 
 
 class Candidate(models.Model):
+    # Applicant profile, shared across multiple resumes if needed.
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
@@ -55,6 +71,7 @@ class Candidate(models.Model):
 
 
 class Resume(models.Model):
+    # Uploaded resume file + extracted AI text/skills.
     candidate = models.ForeignKey(
         Candidate,
         on_delete=models.CASCADE,
