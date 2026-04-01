@@ -53,6 +53,7 @@ simple version of what it does:
 Public:
 - `GET /api/public/jobs/` -> active jobs list
 - `POST /api/public/apply/` -> create candidate from json
+  - returns `409` if email already exists (no more server error on duplicates)
 
 Internal:
 - `GET /api/internal/jobs/` -> all jobs with active/inactive state
@@ -78,7 +79,7 @@ Utility:
 
 Periodic flow:
 1. Celery beat triggers `generate_daily_stats` every minute.
-2. Task counts resumes per job.
+2. Task counts resumes per job for **today only** (`uploaded_at__date=today`).
 3. Writes/updates `DailyStats` for today.
 
 ## 5) Stack Explanation (simple and practical)
@@ -126,7 +127,8 @@ used here to run the web app in containerized local setup.
 ## 6) Important Notes (current state)
 
 - `settings.py` references `users` app (`AUTH_USER_MODEL = 'users.User'`) but `users/` app is not in this repo.
-- `.env` has db vars, but database config is currently hardcoded in `settings.py`.
+- `DEBUG` and postgres settings are now read from env vars (`DEBUG`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`).
+- duplicate route include for candidates at project root was removed; canonical candidate route is `/api/candidates/`.
 - compose file currently starts only `web`; redis/celery/postgres services are not defined there yet.
 - tests are still empty (`recruitment/tests.py`).
 

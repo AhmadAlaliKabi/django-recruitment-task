@@ -44,8 +44,6 @@ urlpatterns = [
 
     # Simple Redis sanity endpoint
     path("test-cache/", test_redis_cache, name="test_cache"),
-    # Duplicate include for drf_urls kept from current project wiring.
-    path("", include("recruitment.drf_urls")),
 ] + router.urls + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.DEBUG:

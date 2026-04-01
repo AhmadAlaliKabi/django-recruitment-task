@@ -17,7 +17,7 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-dev-key")
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False").lower() in ("1", "true", "yes", "on")
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
 INSTALLED_APPS = [
@@ -49,15 +49,14 @@ ROOT_URLCONF = 'AI_Services_Django.urls'
 WSGI_APPLICATION = 'AI_Services_Django.wsgi.application'
 
 DATABASES = {
-    # Current setup is fixed to local postgres values.
-    # You can move this to env vars later for cleaner deployment setups.
+    # Database is configured from env vars with safe local defaults.
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "ai_services_db",
-        "USER": "postgres",
-        "PASSWORD": "1234",
-        "HOST": "localhost",
-        "PORT": "5432",
+        "NAME": os.getenv("DB_NAME", "ai_services_db"),
+        "USER": os.getenv("DB_USER", "postgres"),
+        "PASSWORD": os.getenv("DB_PASSWORD", ""),
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
 

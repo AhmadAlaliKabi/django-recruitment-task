@@ -61,7 +61,10 @@ def generate_daily_stats():
     today = timezone.now().date()
 
     for job in JobPosting.objects.all():
-        application_count = Resume.objects.filter(job_posting=job).count()
+        application_count = Resume.objects.filter(
+            job_posting=job,
+            uploaded_at__date=today
+        ).count()
 
         DailyStats.objects.update_or_create(
             job_posting=job,

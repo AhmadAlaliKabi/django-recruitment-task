@@ -14,6 +14,7 @@ from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 import json
+from django.db import IntegrityError
 
 from .models import JobPosting, Candidate
 from rest_framework import viewsets
@@ -87,6 +88,11 @@ class JobApplicationView(View):
                     "candidate_id": candidate.id,
                 },
                 status=201
+            )
+        except IntegrityError:
+            return JsonResponse(
+                {"error": "A candidate with this email already exists."},
+                status=409
             )
 
         except json.JSONDecodeError:
