@@ -59,3 +59,17 @@ class ResumeSerializer(serializers.ModelSerializer):
         resume = Resume.objects.create(**validated_data)
         parse_resume_task.delay(resume.id)
         return resume
+
+
+class SalaryPredictionInputSerializer(serializers.Serializer):
+    """
+    Input validation for salary prediction endpoint.
+    Matches training feature names and expected types.
+    """
+
+    Department = serializers.CharField(max_length=100)
+    Experience_Years = serializers.IntegerField(min_value=0)
+    Education_Level = serializers.CharField(max_length=100)
+    Age = serializers.IntegerField(min_value=16, max_value=100)
+    Gender = serializers.CharField(max_length=20)
+    City = serializers.CharField(max_length=100)
