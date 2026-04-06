@@ -55,11 +55,26 @@ class JobPosting(models.Model):
 
 class Candidate(models.Model):
     # Applicant profile, shared across multiple resumes if needed.
+    STATUS_SCREENING = "screening"
+    STATUS_INTERVIEW = "interview"
+    STATUS_REJECTED = "rejected"
+    STATUS_CHOICES = [
+        (STATUS_SCREENING, "Screening"),
+        (STATUS_INTERVIEW, "Interview"),
+        (STATUS_REJECTED, "Rejected"),
+    ]
+
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=30, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    application_status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_SCREENING,
+    )
+    priority_score = models.PositiveIntegerField(default=50)
     expected_salary = models.DecimalField(
         max_digits=10,
         decimal_places=2,

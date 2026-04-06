@@ -1,55 +1,48 @@
-"""
-Purpose:
-    Main Django configuration for this backend.
+"""Main Django settings with beginner-friendly structure and comments."""
 
-Connects with:
-    - Database (PostgreSQL)
-    - Cache (Redis via django-redis)
-    - Async jobs (Celery + Redis broker/result backend)
-    - Auth (JWT + custom user model from users app)
-    - URL router and WSGI/ASGI entrypoints
-"""
-
-from pathlib import Path
-from datetime import timedelta
 import os
+from datetime import timedelta
+from pathlib import Path
+
+from celery.schedules import crontab
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
+# Core app settings
 SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-dev-key")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("1", "true", "yes", "on")
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if host.strip()]
 
 INSTALLED_APPS = [
-    # Core Django apps (admin/auth/session/static framework)
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    # Third-party API framework
-    'rest_framework',
-    # Local apps
-    'recruitment',
-    'users',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "recruitment",
+    "users",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "recruitment.middleware.ResumeAccessLogMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'AI_Services_Django.urls'
-WSGI_APPLICATION = 'AI_Services_Django.wsgi.application'
+ROOT_URLCONF = "AI_Services_Django.urls"
+WSGI_APPLICATION = "AI_Services_Django.wsgi.application"
 
+# PostgreSQL configuration from .env
 DATABASES = {
-    # Database is configured from env vars with safe local defaults.
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("DB_NAME", "ai_services_db"),
@@ -60,70 +53,70 @@ DATABASES = {
     }
 }
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Asia/Riyadh'
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "Asia/Riyadh"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+AUTH_USER_MODEL = "users.User"
 
-AUTH_USER_MODEL = 'users.User'
-
+# DRF + JWT setup (all APIs secured by default)
 REST_FRAMEWORK = {
-    # All DRF endpoints use JWT bearer authentication by default.
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
+# Redis cache setup
 CACHES = {
-    # Redis is used as the default Django cache backend.
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.getenv("CACHE_URL", "redis://redis:6379/1"),
+        "LOCATION": os.getenv("CACHE_URL", "redis://127.0.0.1:6379/1"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },
     }
 }
 
-CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
-CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://redis:6379/0")
+# Celery setup (Redis broker + backend)
+CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Asia/Riyadh"
 
-from celery.schedules import crontab
-
+# Run the daily stats task every day at midnight.
 CELERY_BEAT_SCHEDULE = {
-    # Periodic task: refresh stats rows continuously (currently every 1 minute).
-    'generate-daily-stats-every-minute': {
-        'task': 'recruitment.tasks.generate_daily_stats',
-        'schedule': crontab(minute='*/1'),
+    "generate-daily-stats-at-midnight": {
+        "task": "recruitment.tasks.generate_daily_stats",
+        "schedule": crontab(hour=0, minute=0),
     },
 }
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # or [BASE_DIR / "templates"] if you want later
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
